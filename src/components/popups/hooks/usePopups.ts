@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import { popupsStore } from "./store";
+import { popupsStore } from "../store";
 
 export const usePopups = () => {
   const popups = useSyncExternalStore(

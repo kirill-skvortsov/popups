@@ -1,6 +1,4 @@
-import type { Popup } from "./types";
-
-type IsNever<T> = [T] extends [never] ? true : false;
+import type { IsNever, Popup } from "./types";
 
 type Subscriber = () => void;
 
@@ -17,12 +15,14 @@ class PopupsStore {
   private prevSnapshot: OpenPopup<any>[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private resolvers: Map<string, (value: any) => void>;
+  private localPopups: Set<string>;
 
   constructor() {
     this.popups = new Map();
     this.subscribers = new Set();
     this.prevSnapshot = [];
     this.resolvers = new Map();
+    this.localPopups = new Set();
   }
 
   subscribe(subscriber: Subscriber) {
@@ -97,6 +97,17 @@ class PopupsStore {
     );
   }
 
+  makeLocal<Props, Resolve>(popup: Popup<Props, Resolve>) {
+    this.localPopups.add(popup.key);
+    return () => {
+      this.localPopups.delete(popup.key);
+    };
+  }
+
+  get local() {
+    return this.localPopups;
+  }
+
   getSnapshot() {
     if (!this.areSnapshotsEqual) {
       this.prevSnapshot = this.currentSnapshot;
@@ -112,3 +123,4 @@ export const openPopup = popupsStore.openPopup.bind(popupsStore);
 export const closePopup = popupsStore.closePopup.bind(popupsStore);
 export const closeAllPopups = popupsStore.closeAllPopups.bind(popupsStore);
 export const awaitPopup = popupsStore.awaitPopup.bind(popupsStore);
+export const makeLocal = popupsStore.makeLocal.bind(popupsStore);

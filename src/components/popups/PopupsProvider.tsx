@@ -1,13 +1,13 @@
 import type { FC, ReactNode } from "react";
 
-import { usePopups } from "./usePopups";
+import { useGlobalPopups } from "./hooks/useGlobalPopups";
 
 type Props = {
   children: ReactNode;
 };
 
 export const PopupsProvider: FC<Props> = ({ children }) => {
-  const popups = usePopups();
+  const popups = useGlobalPopups();
 
   return (
     <>
