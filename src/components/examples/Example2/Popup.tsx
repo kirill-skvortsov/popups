@@ -1,15 +1,14 @@
-import { closePopup, createPopup } from "../../popups";
+import { closePopup, Popup } from "../../popups";
 
 type Props = {
   someProp: string;
 };
 
-type Resolve = {
+type Result = {
   data: number;
 };
 
-// Wrap all popups in createPopup HoC
-export const Example2Popup = createPopup<Props, Resolve>(({ someProp }) => {
+export const Example2Popup: Popup<Props, Result> = ({ someProp }) => {
   const handleCloseWithProps = () => closePopup(Example2Popup, { data: 42 });
 
   const handleClose = () => closePopup(Example2Popup);
@@ -22,4 +21,4 @@ export const Example2Popup = createPopup<Props, Resolve>(({ someProp }) => {
       <button onClick={handleClose}>Close without props</button>
     </div>
   );
-});
+};

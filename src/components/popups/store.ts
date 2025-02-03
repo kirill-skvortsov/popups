@@ -1,28 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { IsNever, Popup } from "./types";
 
 type Subscriber = () => void;
 
-type OpenPopup<Props> = {
-  Component: Popup<Props>;
-  props: Props;
+type PopupObject<Props, Result> = {
+  Component: Popup<Props, Result>;
+  key: string;
+  initialProps: Props;
 };
 
 class PopupsStore {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private popups: Map<string, OpenPopup<any>>;
+  private popups: PopupObject<any, any>[];
+  private resolvers: WeakMap<Popup<any>, (value: any) => void>;
+  private localPopups: WeakSet<Popup<any>>;
+
   private subscribers: Set<Subscriber>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private prevSnapshot: OpenPopup<any>[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private resolvers: Map<string, (value: any) => void>;
-  private localPopups: Set<string>;
+  private prevSnapshot: PopupObject<any, any>[];
 
   constructor() {
-    this.popups = new Map();
+    this.popups = [];
+    this.resolvers = new WeakMap();
+    this.localPopups = new WeakSet();
+
     this.subscribers = new Set();
     this.prevSnapshot = [];
-    this.resolvers = new Map();
-    this.localPopups = new Set();
   }
 
   subscribe(subscriber: Subscriber) {
@@ -34,86 +35,91 @@ class PopupsStore {
     this.subscribers.forEach((subscriber) => subscriber());
   }
 
+  private generateKey() {
+    return crypto.randomUUID();
+  }
+
   openPopup<Props extends never>(popup: Popup<Props>): void;
   openPopup<Props>(
     popup: Popup<Props>,
-    props: IsNever<Props> extends true ? never : Props
+    initialProps: IsNever<Props> extends true ? never : Props
   ): void;
-  openPopup<Props>(popup: Popup<Props>, props?: Props) {
-    if (this.popups.has(popup.key)) {
+  openPopup<Props>(popup: Popup<Props>, initialProps?: Props) {
+    if (this.popups.some(({ Component }) => Component === popup)) {
       return;
     }
 
-    this.popups.set(popup.key, { Component: popup, props });
+    this.popups.push({
+      Component: popup,
+      key: this.generateKey(),
+      initialProps,
+    });
     this.notify();
   }
 
   closePopup<Props extends never>(popup: Popup<Props>): void;
   closePopup<Props>(popup: Popup<Props>): void;
-  closePopup<Props, Resolve>(
-    popup: Popup<Props, Resolve>,
-    data: IsNever<Resolve> extends true ? never : Resolve
+  closePopup<Props, Result>(
+    popup: Popup<Props, Result>,
+    data: IsNever<Result> extends true ? never : Result
   ): void;
-  closePopup<Props, Resolve>(popup: Popup<Props, Resolve>, data?: Resolve) {
-    if (!this.popups.has(popup.key)) {
+  closePopup<Props, Result>(popup: Popup<Props, Result>, data?: Result) {
+    if (!this.popups.some(({ Component }) => Component === popup)) {
       return;
     }
 
-    this.popups.delete(popup.key);
-    this.resolvers.get(popup.key)?.(data);
-    this.resolvers.delete(popup.key);
+    this.popups = this.popups.filter(({ Component }) => Component !== popup);
+    this.resolvers.get(popup)?.(data);
+    this.resolvers.delete(popup);
     this.notify();
   }
 
   closeAllPopups() {
-    this.popups.clear();
-    this.resolvers.clear();
+    this.popups = [];
+    this.resolvers = new WeakMap();
     this.notify();
   }
 
-  awaitPopup<Props, Resolve>(
-    popup: Popup<Props, Resolve>,
-    props: IsNever<Props> extends true ? never : Props
-  ): Promise<Resolve | undefined> {
-    this.openPopup(popup, props);
-    const promise = new Promise<Resolve>((resolve) => {
-      this.resolvers.set(popup.key, resolve);
+  awaitPopup<Props, Result>(
+    popup: Popup<Props, Result>,
+    initialProps: IsNever<Props> extends true ? never : Props
+  ): Promise<Result | undefined> {
+    this.openPopup(popup, initialProps);
+    const promise = new Promise<Result>((resolve) => {
+      this.resolvers.set(popup, resolve);
     });
     return promise;
   }
 
-  private get currentSnapshot() {
-    return Array.from(this.popups.values());
-  }
-
-  // Not ideal, but works as an example
-  // Should be replaced with a proper comparison
   private get areSnapshotsEqual() {
     return (
-      JSON.stringify(
-        this.prevSnapshot.map(({ Component }) => Component.key)
-      ) ===
-      JSON.stringify(this.currentSnapshot.map(({ Component }) => Component.key))
+      this.prevSnapshot.length === this.popups.length &&
+      this.prevSnapshot.every(
+        (popup, index) => this.popups[index].Component === popup.Component
+      )
     );
   }
 
-  makeLocal<Props, Resolve>(popup: Popup<Props, Resolve>) {
-    this.localPopups.add(popup.key);
+  getSnapshot() {
+    if (!this.areSnapshotsEqual) {
+      this.prevSnapshot = this.popups.slice();
+    }
+
+    return this.prevSnapshot;
+  }
+
+  makeLocal<Props, Result>(popup: Popup<Props, Result>) {
+    this.localPopups.add(popup);
+    this.notify();
+
     return () => {
-      this.localPopups.delete(popup.key);
+      this.localPopups.delete(popup);
+      this.notify();
     };
   }
 
   get local() {
     return this.localPopups;
-  }
-
-  getSnapshot() {
-    if (!this.areSnapshotsEqual) {
-      this.prevSnapshot = this.currentSnapshot;
-    }
-
-    return this.prevSnapshot;
   }
 }
 

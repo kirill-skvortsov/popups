@@ -1,14 +1,13 @@
 import { useContext } from "react";
 
-import { closePopup, createPopup } from "../../popups";
+import { closePopup, Popup } from "../../popups";
 import { Context } from "./context";
 
 type Props = {
   name: string;
 };
 
-// Wrap all popups in createPopup HoC
-export const Example4Popup = createPopup<Props>(({ name }) => {
+export const Example4Popup: Popup<Props> = ({ name }) => {
   const context = useContext(Context);
 
   return (
@@ -20,4 +19,4 @@ export const Example4Popup = createPopup<Props>(({ name }) => {
       <button onClick={() => closePopup(Example4Popup)}>Close</button>
     </div>
   );
-});
+};

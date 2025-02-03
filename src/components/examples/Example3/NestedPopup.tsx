@@ -1,7 +1,6 @@
-import { closePopup, createPopup, closeAllPopups } from "../../popups";
+import { closePopup, closeAllPopups, Popup } from "../../popups";
 
-// Wrap all popups in createPopup HoC
-export const Example3NestedPopup = createPopup(() => {
+export const Example3NestedPopup: Popup = () => {
   return (
     <div style={{ padding: 20, border: "1px solid black" }}>
       <h1>Example 3 nested popup</h1>
@@ -10,4 +9,4 @@ export const Example3NestedPopup = createPopup(() => {
       <button onClick={() => closeAllPopups()}>Close all popups</button>
     </div>
   );
-});
+};

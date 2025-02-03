@@ -3,5 +3,5 @@ import { usePopups } from "./usePopups";
 
 export const useGlobalPopups = () => {
   const popups = usePopups();
-  return popups.filter((popup) => !popupsStore.local.has(popup.Component.key));
+  return popups.filter((popup) => !popupsStore.local.has(popup.Component));
 };

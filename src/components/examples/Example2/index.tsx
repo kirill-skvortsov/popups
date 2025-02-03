@@ -1,7 +1,6 @@
 import { awaitPopup, closePopup } from "../../popups";
 import { Example2Popup } from "./Popup";
 
-// Wrap all popups in createPopup HoC
 export const Example2 = () => {
   const handleOpen = async () => {
     const data = await awaitPopup(Example2Popup, { someProp: "Some value 2" });
@@ -10,7 +9,7 @@ export const Example2 = () => {
       return;
     }
 
-    console.log(`Received data: ${JSON.stringify(data)}`);
+    console.log(`Received data: ${JSON.stringify(data.data)}`);
   };
 
   const handleClose = () => closePopup(Example2Popup);

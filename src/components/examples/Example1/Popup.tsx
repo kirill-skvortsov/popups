@@ -1,11 +1,10 @@
-import { closePopup, createPopup } from "../../popups";
+import { closePopup, Popup } from "../../popups";
 
 type Props = {
   someProp: string;
 };
 
-// Wrap all popups in createPopup HoC
-export const Example1Popup = createPopup<Props>(({ someProp }) => {
+export const Example1Popup: Popup<Props> = ({ someProp }) => {
   return (
     <div style={{ padding: 20, border: "1px solid black" }}>
       <h1>Example 1</h1>
@@ -14,4 +13,4 @@ export const Example1Popup = createPopup<Props>(({ someProp }) => {
       <button onClick={() => closePopup(Example1Popup)}>Close</button>
     </div>
   );
-});
+};

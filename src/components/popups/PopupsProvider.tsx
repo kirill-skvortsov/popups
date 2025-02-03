@@ -14,8 +14,8 @@ export const PopupsProvider: FC<Props> = ({ children }) => {
       {children}
 
       <div id="popups-root">
-        {popups.map(({ Component, props }) => (
-          <Component key={Component.key} {...props} />
+        {popups.map(({ key, Component, initialProps }) => (
+          <Component key={key} {...initialProps} />
         ))}
       </div>
     </>

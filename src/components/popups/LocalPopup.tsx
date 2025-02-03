@@ -1,8 +1,8 @@
 import type { IsNever, Popup } from "./types";
 import { useLocalPopup } from "./hooks/useLocalPopup";
 
-type LocalPopupProps<Props, Resolve> = {
-  popup: Popup<Props, Resolve>;
+type LocalPopupProps<Props, Result> = {
+  popup: Popup<Props, Result>;
 } & (IsNever<Props> extends true
   ? // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {}
@@ -10,15 +10,15 @@ type LocalPopupProps<Props, Resolve> = {
       [Key in keyof Props]: Props[Key];
     }>);
 
-export const LocalPopup = <Props, Resolve>({
+export const LocalPopup = <Props, Result>({
   popup,
   ...additionalProps
-}: LocalPopupProps<Props, Resolve>) => {
+}: LocalPopupProps<Props, Result>) => {
   const localPopup = useLocalPopup(popup);
   if (!localPopup) {
     return null;
   }
 
-  const { Component, props } = localPopup;
-  return <Component {...props} {...additionalProps} />;
+  const { Component, initialProps } = localPopup;
+  return <Component {...initialProps} {...additionalProps} />;
 };
